@@ -87,6 +87,7 @@ main(int argc, const char *argv[])
 	PMEMobjpool *pop;
 	const char *path;
 	uint64_t start = 0ULL;
+	int i = 0;
 	
 	if (argc < 3) {
 		print_help();
@@ -97,6 +98,7 @@ main(int argc, const char *argv[])
 	int node_size = strtol(argv[3], NULL, 0);
 	printf("node number is %d, node size is %d\n", node_num, node_size);
 
+	start = debug_time_usec();
 	if (file_exists(path) != 0) {
 		if ((pop = pmemobj_create(path, POBJ_LAYOUT_NAME(list),
 			1*1024*1024*1024, 0666)) == NULL) {
@@ -115,48 +117,24 @@ main(int argc, const char *argv[])
 	struct tqueuehead *tqhead = &D_RW(root)->head;
 	TOID(struct tqnode) node;
 
-//	if (strcmp(argv[2], "insert") == 0) {
-//		if (argc == 4) {
-	int i = 0;
-			TX_BEGIN(pop) {
-	for (i = 0; i < node_num; i++) {
-				node = TX_NEW(struct tqnode);
-				D_RW(node)->data = 0;
-				POBJ_TAILQ_INSERT_HEAD(tqhead, node, tnd);
-				printf("i is %d\n", i);
+#if 1
+	TX_BEGIN(pop) {
+		for (i = 0; i < node_num; i++) {
+			node = TX_NEW(struct tqnode);
+			D_RW(node)->data = 0;
+			POBJ_TAILQ_INSERT_HEAD(tqhead, node, tnd);
+			printf("i is %d\n", i);
+		}
+	} TX_ONABORT {
+		abort();
+	} TX_END
+#else
+	POBJ_TAILQ_FOREACH(node, tqhead, tnd) {
+		//printf("i is %d\n", i);
+		//i++;
 	}
-			} TX_ONABORT {
-				abort();
-			} TX_END
-#if 0
-			printf("Added %c to FIFO\n", *argv[3]);
-		} else {
-			print_help();
-		}
-	} else if (strcmp(argv[2], "remove") == 0) {
-		if (POBJ_TAILQ_EMPTY(tqhead)) {
-			printf("FIFO is empty\n");
-		} else {
-			node = POBJ_TAILQ_LAST(tqhead);
-			TX_BEGIN(pop) {
-				POBJ_TAILQ_REMOVE_FREE(tqhead, node, tnd);
-			} TX_ONABORT {
-				abort();
-			} TX_END
-			printf("Removed element from FIFO\n");
-		}
-	} else if (strcmp(argv[2], "print") == 0) {
-		printf("Elements in FIFO:\n");
-#endif
-		start = debug_time_usec();
-		POBJ_TAILQ_FOREACH(node, tqhead, tnd) {
-			//printf("%c\t", D_RO(node)->data);
-		}
 	printf("Cost %lu microseconds\n", debug_diff_usec(start));
-		//printf("\n");
-//	} else {
-//		print_help();
-//	}
+#endif
 	pmemobj_close(pop);
 	return 0;
 }
