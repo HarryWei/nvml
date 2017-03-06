@@ -34,6 +34,10 @@
  * fifo.c - example of tail queue usage
  */
 
+#include <sys/time.h>
+#include <execinfo.h>
+#include <stdint.h>
+#include <inttypes.h>
 #include <ex_common.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,17 +57,28 @@ struct fifo_root {
 
 struct tqnode {
 	char data;
+	char size[32]; //added by Weiwei Jia
 	POBJ_TAILQ_ENTRY(struct tqnode) tnd;
 };
+
+uint64_t debug_time_usec(void) {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return tv.tv_sec * 1000000lu + tv.tv_usec;
+}
+
+uint64_t debug_diff_usec(const uint64_t last) {
+  return debug_time_usec() - last;
+}
 
 static void
 print_help(void)
 {
-	printf("usage: fifo <pool> <option> [<type>]\n");
+	printf("usage: fifo <pool> <node_number> <node_size>\n");
 	printf("\tAvailable options:\n");
-	printf("\tinsert, <character> Insert character into FIFO\n");
-	printf("\tremove, Remove element from FIFO\n");
-	printf("\tprint, Print all FIFO elements\n");
+	printf("\tpool: pool file path\n");
+	printf("\tnode_number: how many node in linked list\n");
+	printf("\tnode_size: the size of each node\n");
 }
 
 int
@@ -71,16 +86,20 @@ main(int argc, const char *argv[])
 {
 	PMEMobjpool *pop;
 	const char *path;
-
+	uint64_t start = 0ULL;
+	
 	if (argc < 3) {
 		print_help();
 		return 0;
 	}
 	path = argv[1];
+	int node_num = strtol(argv[2], NULL, 0);
+	int node_size = strtol(argv[3], NULL, 0);
+	printf("node number is %d, node size is %d\n", node_num, node_size);
 
 	if (file_exists(path) != 0) {
 		if ((pop = pmemobj_create(path, POBJ_LAYOUT_NAME(list),
-			PMEMOBJ_MIN_POOL, 0666)) == NULL) {
+			1*1024*1024*1024, 0666)) == NULL) {
 			perror("failed to create pool\n");
 			return -1;
 		}
@@ -96,15 +115,20 @@ main(int argc, const char *argv[])
 	struct tqueuehead *tqhead = &D_RW(root)->head;
 	TOID(struct tqnode) node;
 
-	if (strcmp(argv[2], "insert") == 0) {
-		if (argc == 4) {
+//	if (strcmp(argv[2], "insert") == 0) {
+//		if (argc == 4) {
+	int i = 0;
+	start = debug_time_usec();
 			TX_BEGIN(pop) {
+	for (i = 0; i < node_num; i++) {
 				node = TX_NEW(struct tqnode);
-				D_RW(node)->data = *argv[3];
+				D_RW(node)->data = 0;
 				POBJ_TAILQ_INSERT_HEAD(tqhead, node, tnd);
+	}
 			} TX_ONABORT {
 				abort();
 			} TX_END
+#if 0
 			printf("Added %c to FIFO\n", *argv[3]);
 		} else {
 			print_help();
@@ -123,13 +147,15 @@ main(int argc, const char *argv[])
 		}
 	} else if (strcmp(argv[2], "print") == 0) {
 		printf("Elements in FIFO:\n");
+#endif
 		POBJ_TAILQ_FOREACH(node, tqhead, tnd) {
-			printf("%c\t", D_RO(node)->data);
+			//printf("%c\t", D_RO(node)->data);
 		}
-		printf("\n");
-	} else {
-		print_help();
-	}
+		//printf("\n");
+//	} else {
+//		print_help();
+//	}
 	pmemobj_close(pop);
+	printf("Cost %lu microseconds\n", debug_diff_usec(start));
 	return 0;
 }
