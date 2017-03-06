@@ -118,12 +118,12 @@ main(int argc, const char *argv[])
 //	if (strcmp(argv[2], "insert") == 0) {
 //		if (argc == 4) {
 	int i = 0;
-	start = debug_time_usec();
 			TX_BEGIN(pop) {
 	for (i = 0; i < node_num; i++) {
 				node = TX_NEW(struct tqnode);
 				D_RW(node)->data = 0;
 				POBJ_TAILQ_INSERT_HEAD(tqhead, node, tnd);
+				printf("i is %d\n", i);
 	}
 			} TX_ONABORT {
 				abort();
@@ -148,14 +148,15 @@ main(int argc, const char *argv[])
 	} else if (strcmp(argv[2], "print") == 0) {
 		printf("Elements in FIFO:\n");
 #endif
+		start = debug_time_usec();
 		POBJ_TAILQ_FOREACH(node, tqhead, tnd) {
 			//printf("%c\t", D_RO(node)->data);
 		}
+	printf("Cost %lu microseconds\n", debug_diff_usec(start));
 		//printf("\n");
 //	} else {
 //		print_help();
 //	}
 	pmemobj_close(pop);
-	printf("Cost %lu microseconds\n", debug_diff_usec(start));
 	return 0;
 }
