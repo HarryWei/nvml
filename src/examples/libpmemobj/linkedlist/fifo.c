@@ -116,6 +116,8 @@ main(int argc, const char *argv[])
 	TOID(struct fifo_root) root = POBJ_ROOT(pop, struct fifo_root);
 	struct tqueuehead *tqhead = &D_RW(root)->head;
 	TOID(struct tqnode) node;
+	printf("Open file and mmap cost %lu microseconds\n", debug_diff_usec(start));
+	start = debug_time_usec();
 
 #if 0
 	TX_BEGIN(pop) {
@@ -133,7 +135,7 @@ main(int argc, const char *argv[])
 		//printf("i is %d\n", i);
 		//i++;
 	}
-	printf("Cost %lu microseconds\n", debug_diff_usec(start));
+	printf("Scan linkedlist cost %lu microseconds\n", debug_diff_usec(start));
 #endif
 	pmemobj_close(pop);
 	return 0;
