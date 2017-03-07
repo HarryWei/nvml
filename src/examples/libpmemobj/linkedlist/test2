@@ -1,0 +1,42 @@
+32 bytes...
+memsize is 16633221120
+count is 4060845
+node number is 1000000, node size is 32
+Cost 4371984 microseconds
+node number is 1000000, node size is 32
+Cost 54886 microseconds
+64 bytes...
+memsize is 16633221120
+count is 4060845
+node number is 1000000, node size is 64
+Cost 7156342 microseconds
+node number is 1000000, node size is 64
+Cost 64205 microseconds
+128 bytes...
+memsize is 16633221120
+count is 4060845
+node number is 1000000, node size is 128
+Cost 4829691 microseconds
+node number is 1000000, node size is 128
+Cost 88979 microseconds
+256 bytes...
+memsize is 16633221120
+count is 4060845
+node number is 1000000, node size is 256
+Cost 10357953 microseconds
+node number is 1000000, node size is 256
+Cost 93335 microseconds
+512 bytes...
+memsize is 16633221120
+count is 4060845
+node number is 1000000, node size is 512
+Cost 11793219 microseconds
+node number is 1000000, node size is 512
+Cost 102100 microseconds
+1024 bytes...
+memsize is 16633221120
+count is 4060845
+node number is 1000000, node size is 1024
+Cost 25487437 microseconds
+node number is 1000000, node size is 1024
+Cost 143601 microseconds

@@ -57,7 +57,7 @@ struct fifo_root {
 
 struct tqnode {
 	char data;
-	char size[32]; //added by Weiwei Jia
+	char size[1024]; //added by Weiwei Jia
 	POBJ_TAILQ_ENTRY(struct tqnode) tnd;
 };
 
@@ -101,7 +101,7 @@ main(int argc, const char *argv[])
 	start = debug_time_usec();
 	if (file_exists(path) != 0) {
 		if ((pop = pmemobj_create(path, POBJ_LAYOUT_NAME(list),
-			1*1024*1024*1024, 0666)) == NULL) {
+			1.5*1024*1024*1024, 0666)) == NULL) {
 			perror("failed to create pool\n");
 			return -1;
 		}
@@ -117,7 +117,7 @@ main(int argc, const char *argv[])
 	struct tqueuehead *tqhead = &D_RW(root)->head;
 	TOID(struct tqnode) node;
 
-#if 1
+#if 0
 	TX_BEGIN(pop) {
 		for (i = 0; i < node_num; i++) {
 			node = TX_NEW(struct tqnode);

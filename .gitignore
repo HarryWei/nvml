@@ -20,4 +20,5 @@ dpkg/
 *.htmp
 *.hpptmp
 *.aps
+pool_file*
 tags
